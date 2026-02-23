@@ -1,0 +1,23 @@
+import numpy as np
+from scipy.optimize import minimize
+
+def optimize_portfolio(returns, cov_matrix, risk_free_rate=0.03):
+
+    num_assets = len(returns)
+
+    def negative_sharpe(weights):
+        portfolio_return = np.dot(weights, returns)
+        portfolio_vol = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+        sharpe = (portfolio_return - risk_free_rate) / portfolio_vol
+        return -sharpe
+
+    constraints = {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}
+    bounds = tuple((0, 1) for _ in range(num_assets))
+    init_guess = np.ones(num_assets) / num_assets
+
+    result = minimize(negative_sharpe, init_guess,
+                      method='SLSQP',
+                      bounds=bounds,
+                      constraints=constraints)
+
+    return result.x
